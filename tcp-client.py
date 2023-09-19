@@ -7,43 +7,35 @@ def receive_file_data():
     file_size = int(file_info[1])
     file_hash = file_info[2]
     file_status = file_info[3]
-    print('file_name:', file_name)
 
     if file_status == "nok":
         print("Arquivo inexistente no servidor.")
         return
     
-    received_data = client_socket.recv(1024)
-    with open(file_name, 'wb') as file:
-            file.write(received_data)
+    # Escrever arquivo
+    with open('Novo_Arquivo.txt', 'wb') as file:
+        received_data = 0
+        while received_data < file_size:
+            data = client_socket.recv(1024)
+            received_data += len(data)
+            file.write(data)
 
-    print(f"Arquivo {file_name} recebido e verificado com sucesso.")
-    print(received_data)
-    return
-    '''
-    # Recebe os dados do arquivo
-    received_data = b""
-    while len(received_data) < file_size:
-        data_chunk = client_socket.recv(1024)
-        received_data += data_chunk
-    
-    # Verifica o Hash
-    hasher = hashlib.sha256()
-    hasher.update(received_data)
-    received_hash = hasher.hexdigest()
+    # Verificar hash do arquivo
+    hash_sha256 = hashlib.sha256()
+    with open (file_name, 'rb') as file:
+        while True:
+            data = file.read(1024)
+            if not data:
+                break
+            hash_sha256.update(data)
+    received_hash = hash_sha256.hexdigest()
 
     if received_hash == file_hash:
-        # Grava o arquivo no cliente
-        with open(file_name, 'wb') as file:
-            file.write(received_data)
-        
-        print(f"Arquivo {file_name} recebido e verificado com sucesso.")
-        return
+        print(f'Arquivo {file_name} recebido e verificado com sucesso.')
+        print(f'Nome: {file_name}\nTamanho: {file_size}\nHash: {file_hash}\nStatus: {file_status}')
     else:
-        print(f'{file_hash} != {received_hash}')
-        print(f"Erro na integridade do arquivo {file_name}. O hash não coincide.")
-        return   
-    '''
+        print(f'Erro na integridade do arquivo: {file_hash} != {received_hash}')
+
 
 HOST = '127.0.0.1'
 PORT = 12345

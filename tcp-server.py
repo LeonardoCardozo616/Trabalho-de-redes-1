@@ -18,29 +18,40 @@ def handle_client(client_socket, porta):
         elif request.startswith('Arquivo'):
             # Ainda em desenvolvimento
             file_name = request.split(' ')[1] #Nome
+            print(f'Recebendo arquivo {file_name}!')
 
-            if os.path.exists(file_name):
-                print(f'Arquivo {file_name} encontrado!')
+            if os.path.isfile(file_name):
+                hash = hashlib.sha256()
                 with open(file_name, 'rb') as file:
-                    file_data = file.read() #Arquivo
+                    while True:
+                        data = file.read(1024) #Arquivo
+                        if not data:
+                            break
+                        hash.update(data)
 
-                hasher = hashlib.sha256()
-                hasher.update(file_data)
-                file_hash = hasher.hexdigest() #Hash
+                file_size = os.path.getsize(file_name) #Tamanho
+                file_hash = hash.hexdigest() #Hash
+                file_status = 'ok'
 
-                file_size = len(file_data) #Tamanho
-                file_status = 'ok' #Status
+                # Adiciona arquivo
+                new_data = f'{file_name}\n{file_size}\n{file_hash}\n{file_status}\n'.encode('utf-8')
+                client_socket.send(new_data)
+                print('Arquivo enviado!')
 
-                data = f'{file_name}\n{file_size}\n{file_hash}\n{file_status}\n'.encode('utf-8')
-                client_socket.send(data)
-                client_socket.send(f'{file_data}'.encode('utf-8'))
+                with open(file_name, 'rb') as file:
+                    while True:
+                        data = file.read(1024)
+                        if not data:
+                            break
+                        client_socket.send(data)
             else:
-                print(f'Arquivo {file_name} NAO encontrado!')
-                client_socket.send(f'{file_name}\n0\n0\nnok'.encode('utf-8'))
-                
+                print('Arquivo não existente!')
+                new_data = f'{file_name}\n0\n0\nnok\n'.encode('utf-8')
+                client_socket.send(new_data)
 
         elif request == 'Chat':
             client_socket.send("Modo Chat ativado.".encode('utf-8'))
+            print(f'{porta} entrou no Chat!')
             while True:
                 # Escreve as mensagens, a mensagem for "sair", o chat é encerrado
                 message = client_socket.recv(1024).decode('utf-8')
