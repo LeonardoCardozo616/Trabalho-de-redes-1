@@ -16,22 +16,22 @@ def handle_client(client_socket, porta):
             break
         
         elif request.startswith('Arquivo'):
-            # Ainda em desenvolvimento
-            file_name = request.split(' ')[1] #Nome
+            file_name = request.split(' ')[1] # Nome
             print(f'Recebendo arquivo {file_name}!')
 
+            # Verifica se arquivo existe
             if os.path.isfile(file_name):
                 hash = hashlib.sha256()
                 with open(file_name, 'rb') as file:
                     while True:
-                        data = file.read(1024) #Arquivo
+                        data = file.read(1024) # Lê arquivo
                         if not data:
                             break
                         hash.update(data)
 
-                file_size = os.path.getsize(file_name) #Tamanho
-                file_hash = hash.hexdigest() #Hash
-                file_status = 'ok'
+                file_size = os.path.getsize(file_name) # Tamanho
+                file_hash = hash.hexdigest() # Hash
+                file_status = 'ok' # Status
 
                 # Adiciona arquivo
                 new_data = f'{file_name}\n{file_size}\n{file_hash}\n{file_status}\n'.encode('utf-8')
@@ -43,17 +43,18 @@ def handle_client(client_socket, porta):
                         data = file.read(1024)
                         if not data:
                             break
-                        client_socket.send(data)
+                        client_socket.send(data) # Envia os dados do arquivo
             else:
                 print('Arquivo não existente!')
                 new_data = f'{file_name}\n0\n0\nnok\n'.encode('utf-8')
                 client_socket.send(new_data)
 
         elif request == 'Chat':
+            # Envia resposta abrindo Chat
             client_socket.send("Modo Chat ativado.".encode('utf-8'))
             print(f'{porta} entrou no Chat!')
             while True:
-                # Escreve as mensagens, a mensagem for "sair", o chat é encerrado
+                # Escreve as mensagens, se a mensagem for "sair", o chat é encerrado
                 message = client_socket.recv(1024).decode('utf-8')
                 if message.lower() == "sair":
                     print(f"{porta} Saiu do Chat!")
@@ -62,7 +63,7 @@ def handle_client(client_socket, porta):
             
             client_socket.send("Modo Chat desativado.".encode('utf-8'))
 
-
+# Criando Socket Servidor
 HOST = '127.0.0.1'
 PORT = 12345
 
@@ -76,5 +77,6 @@ while True:
     client_socket, addr = server_socket.accept()
     print(f"Cliente de {addr[0]}:{addr[1]} conectado!")
 
+    # Threads
     client_thread = threading.Thread(target=handle_client, args=(client_socket, addr[1],))
     client_thread.start()

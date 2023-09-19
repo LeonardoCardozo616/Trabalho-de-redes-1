@@ -2,17 +2,19 @@ import socket
 import hashlib
 
 def receive_file_data():
+    # Recebendo os dados
     file_info = client_socket.recv(1024).decode('utf-8').split('\n')
     file_name = file_info[0]
     file_size = int(file_info[1])
     file_hash = file_info[2]
     file_status = file_info[3]
 
+    # Arquivo não foi encontrado
     if file_status == "nok":
         print("Arquivo inexistente no servidor.")
         return
     
-    # Escrever arquivo
+    # Escreve o arquivo no diretório local
     with open('Novo_Arquivo.txt', 'wb') as file:
         received_data = 0
         while received_data < file_size:
@@ -20,7 +22,7 @@ def receive_file_data():
             received_data += len(data)
             file.write(data)
 
-    # Verificar hash do arquivo
+    # Verifica o hash do arquivo
     hash_sha256 = hashlib.sha256()
     with open (file_name, 'rb') as file:
         while True:
@@ -36,7 +38,7 @@ def receive_file_data():
     else:
         print(f'Erro na integridade do arquivo: {file_hash} != {received_hash}')
 
-
+# Criando Socket Cliente
 HOST = '127.0.0.1'
 PORT = 12345
 
@@ -51,6 +53,7 @@ print("3. Modo Chat")
 while True:
     choice = input("Escolha uma opção (1/2/3): ")
     
+    # Dependendo da escolha vai ativar uma das requests
     if choice == "1":
         client_socket.send("Sair".encode('utf-8'))
         break
